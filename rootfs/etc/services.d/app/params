@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -e # Exit immediately if a command exits with a non-zero status.
+set -u # Treat unset variables as an error.
+
+# Set location of profile.
+echo "--user-data-dir"
+echo "/config/profile"
+
+# Disable the default browser check.
+echo "--no-default-browser-check"
+
+# Run without sandbox (required for container environment).
+echo "--no-sandbox"
+
+# Check if kiosk mode is enabled.
+if is-bool-val-true "${BRAVE_KIOSK:-0}"; then
+    echo "--kiosk"
+fi
+
+# Custom arguments.
+if [ -n "${BRAVE_CUSTOM_ARGS:-}" ]; then
+    eval 'for word in '$BRAVE_CUSTOM_ARGS'; do echo "$word"; done'
+fi
+
+# URL to open.
+# NOTE: This should be the last argument.
+if [ -n "${BRAVE_OPEN_URL:-}" ]; then
+    echo "$BRAVE_OPEN_URL" | tr '|' '\n'
+fi
+
+# vim:ft=sh:ts=4:sw=4:et:sts=4
