@@ -44,26 +44,27 @@ RUN \
     del-pkg extract-dependencies
 
 # Install extra packages.
+# Install extra packages.
 RUN \
     ARCH="$(dpkg --print-architecture)" && \
     if [ "$ARCH" = "amd64" ]; then \
-        libva_intel_driver="libva-intel-driver"; \
+        libva_intel_driver="i965-va-driver"; \
     fi && \
     add-pkg \
         # WebGL support.
-        mesa-dri-gallium \
-        mesa-va-gallium \
+        libgl1-mesa-dri \
+        mesa-va-drivers \
         ${libva_intel_driver:-} \
         # Audio support.
-        libpulse \
+        libpulse0 \
         # Desktop notification support.
-        libnotify \
+        libnotify4 \
         # Icons used by folder/file selection window.
         adwaita-icon-theme \
         # Used to send key presses to the X process.
         xdotool \
         # Font support.
-        font-dejavu \
+        fonts-dejavu-core \
         # Required by Brave's wrapper script.
         bash \
         && \
