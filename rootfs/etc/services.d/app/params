@@ -4,8 +4,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 set -u # Treat unset variables as an error.
 
 # Set location of profile.
-echo "--user-data-dir"
-echo "/config/profile"
+echo "--user-data-dir=/config/profile"
 
 # Disable the default browser check.
 echo "--no-default-browser-check"
