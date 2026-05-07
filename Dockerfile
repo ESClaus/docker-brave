@@ -13,7 +13,7 @@ RUN gcc -static -o membarrier_check membarrier_check.c
 RUN strip membarrier_check
 
 # Pull base image.
-FROM jlesage/baseimage-gui:alpine-3.23-v4.11.3
+FROM jlesage/baseimage-gui:ubuntu-24.04-v4.11.3
 
 # Docker image version is provided via build arg.
 ARG DOCKER_IMAGE_VERSION=
@@ -27,10 +27,10 @@ WORKDIR /tmp
 # Install Brave browser.
 RUN \
     add-pkg --virtual build-dependencies curl && \
-    ARCH="$(apk --print-arch)" && \
-    if [ "$ARCH" = "x86_64" ]; then \
+    ARCH="$(dpkg --print-architecture)" && \
+    if [ "$ARCH" = "amd64" ]; then \
         DEB_ARCH="amd64"; \
-    elif [ "$ARCH" = "aarch64" ]; then \
+    elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
         DEB_ARCH="arm64"; \
     fi && \
     curl -# -L -o /tmp/brave.deb \
@@ -45,8 +45,8 @@ RUN \
 
 # Install extra packages.
 RUN \
-    ARCH="$(apk --print-arch)" && \
-    if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x86_64" ]; then \
+    ARCH="$(dpkg --print-architecture)" && \
+    if [ "$ARCH" = "amd64" ]; then \
         libva_intel_driver="libva-intel-driver"; \
     fi && \
     add-pkg \
@@ -64,8 +64,6 @@ RUN \
         xdotool \
         # Font support.
         font-dejavu \
-        # Needed for Brave's sandbox alternative.
-        libstdc++ \
         # Required by Brave's wrapper script.
         bash \
         && \
