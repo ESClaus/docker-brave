@@ -26,7 +26,7 @@ WORKDIR /tmp
 
 # Install Brave browser.
 RUN \
-    add-pkg --virtual build-dependencies curl && \
+    add-pkg --virtual build-dependencies curl ca-certificates && \
     ARCH="$(dpkg --print-architecture)" && \
     if [ "$ARCH" = "amd64" ]; then \
         DEB_ARCH="amd64"; \
