@@ -37,7 +37,7 @@ RUN \
         "https://github.com/brave/brave-browser/releases/download/v${BRAVE_VERSION}/brave-browser_${BRAVE_VERSION}_${DEB_ARCH}.deb" && \
     add-pkg --virtual extract-dependencies dpkg && \
     dpkg -x /tmp/brave.deb /tmp/brave-pkg && \
-    cp -r /tmp/brave-pkg/opt /opt/ && \
+    cp -r /tmp/brave-pkg/opt/. /opt/ && \
     ln -sf /opt/brave.com/brave/brave-browser /usr/bin/brave-browser && \
     rm -rf /tmp/brave.deb /tmp/brave-pkg && \
     del-pkg build-dependencies && \
