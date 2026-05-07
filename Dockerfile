@@ -44,7 +44,6 @@ RUN \
     del-pkg extract-dependencies
 
 # Install extra packages.
-# Install extra packages.
 RUN \
     ARCH="$(dpkg --print-architecture)" && \
     if [ "$ARCH" = "amd64" ]; then \
@@ -67,6 +66,22 @@ RUN \
         fonts-dejavu-core \
         # Required by Brave's wrapper script.
         bash \
+        # Brave runtime dependencies.
+        libnspr4 \
+        libnss3 \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libcups2 \
+        libdrm2 \
+        libxkbcommon0 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxrandr2 \
+        libgbm1 \
+        libasound2t64 \
+        libpango-1.0-0 \
+        libcairo2 \
         && \
     # Remove unneeded icons.
     find /usr/share/icons/Adwaita -type d -mindepth 1 -maxdepth 1 -not -name 16x16 -not -name scalable -exec rm -rf {} ';' && \
