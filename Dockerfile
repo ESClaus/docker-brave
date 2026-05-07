@@ -66,6 +66,8 @@ RUN \
         font-dejavu \
         # Needed for Brave's sandbox alternative.
         libstdc++ \
+        # Required by Brave's wrapper script.
+        bash \
         && \
     # Remove unneeded icons.
     find /usr/share/icons/Adwaita -type d -mindepth 1 -maxdepth 1 -not -name 16x16 -not -name scalable -exec rm -rf {} ';' && \
