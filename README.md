@@ -30,10 +30,13 @@ protection by default — no extensions required.
 ## Why This Container?
 
 The [LinuxServer.io Brave container](https://docs.linuxserver.io/images/docker-brave/)
-uses KasmVNC for rendering, which can feel laggy and unresponsive — especially
-over remote connections. This container uses TigerVNC via
+uses [Selkies](https://github.com/selkies-project/selkies), a WebRTC-based
+remote desktop streaming technology. While feature-rich, the WebRTC encoding
+overhead can feel laggy and unresponsive — especially over remote connections.
+
+This container uses TigerVNC via
 [jlesage's baseimage-gui](https://github.com/jlesage/docker-baseimage-gui),
-providing a significantly more responsive experience.
+providing a significantly more responsive experience with lower latency.
 
 ---
 
