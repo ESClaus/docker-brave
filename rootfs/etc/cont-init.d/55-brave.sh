@@ -25,4 +25,16 @@ do
     fi
 done
 
+# Remove stale Brave profile lock files left over from unclean shutdowns.
+for LOCK_FILE in \
+    /config/profile/Default/SingletonLock \
+    /config/profile/Default/SingletonSocket \
+    /config/profile/Default/SingletonCookie
+do
+    if [ -e "$LOCK_FILE" ]; then
+        echo "Removing stale lock file: $LOCK_FILE"
+        rm -f "$LOCK_FILE"
+    fi
+done
+
 # vim:ft=sh:ts=4:sw=4:et:sts=4
