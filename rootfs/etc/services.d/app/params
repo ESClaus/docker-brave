@@ -11,6 +11,7 @@ echo "--no-default-browser-check"
 
 # Run without sandbox (required for container environment).
 echo "--no-sandbox"
+echo "--test-type"
 
 # Check if kiosk mode is enabled.
 if is-bool-val-true "${BRAVE_KIOSK:-0}"; then
