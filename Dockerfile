@@ -19,7 +19,7 @@ FROM jlesage/baseimage-gui:ubuntu-24.04-v4.11.3
 ARG DOCKER_IMAGE_VERSION=
 
 # Define software versions.
-ARG BRAVE_VERSION=1.89.145
+ARG BRAVE_VERSION=1.90.121
 
 # Define working directory.
 WORKDIR /tmp
