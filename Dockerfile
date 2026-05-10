@@ -79,6 +79,7 @@ RUN \
         libxfixes3 \
         libxrandr2 \
         libgbm1 \
+        libgl1 \
         libasound2t64 \
         libpango-1.0-0 \
         libcairo2 \
