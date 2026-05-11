@@ -359,6 +359,29 @@ If you see warnings about the `membarrier` system call in the container logs,
 see the [Allowing the membarrier System Call](#allowing-the-membarrier-system-call)
 section for solutions.
 
+### GPU and DBus Errors in Log
+
+When viewing the container logs, you may see errors similar to these:
+
+Could not dlopen libGL.so.1: libGL.so.1: cannot open shared object file
+Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket
+Error contacting kwalletd
+
+These errors are expected and harmless in a containerized environment. Brave
+attempts to connect to system services (DBus, KWallet, GPU hardware) that are
+not available inside the container. Brave falls back gracefully in all cases
+and continues to function normally.
+
+These errors do not affect browsing, extensions, or any other functionality.
+
+### "Restore Pages?" Dialog After Restart
+
+When the container is restarted, Brave may display a "Brave didn't shut down
+correctly" dialog offering to restore pages. This is expected behavior caused
+by the container stopping before Brave can write a clean exit state. Simply
+dismiss the dialog by clicking the X — it does not indicate any data loss or
+corruption.
+
 ## Support or Contact
 
 Having troubles with the container or have questions? Please
