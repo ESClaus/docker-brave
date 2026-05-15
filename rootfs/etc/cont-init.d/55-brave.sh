@@ -37,4 +37,11 @@ do
     fi
 done
 
+# Clear stale process tracking from Local State to prevent
+# "profile in use" errors after container restarts.
+if [ -f "/config/profile/Local State" ]; then
+    sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/g' \
+        "/config/profile/Local State" 2>/dev/null || true
+fi
+
 # vim:ft=sh:ts=4:sw=4:et:sts=4
