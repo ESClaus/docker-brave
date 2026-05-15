@@ -84,14 +84,12 @@ RUN \
         libpango-1.0-0 \
         libcairo2 \
         || true && \
-    if [ "$ARCH" = "arm64" ]; then \
         sed -i 's/chown root:staff/chown root:root/g' \
             /var/lib/dpkg/info/fontconfig-config.postinst 2>/dev/null || true && \
         printf '#!/bin/sh\nexit 0\n' > \
             /var/lib/dpkg/info/fontconfig.postinst && \
-        chmod +x /var/lib/dpkg/info/fontconfig.postinst; \
-    fi && \
-    dpkg --configure -a || true && \
+        chmod +x /var/lib/dpkg/info/fontconfig.postinst && \
+        dpkg --configure -a || true && \
     # Remove unneeded icons.
     find /usr/share/icons/Adwaita -type d -mindepth 1 -maxdepth 1 -not -name 16x16 -not -name scalable -exec rm -rf {} ';' && \
     true
