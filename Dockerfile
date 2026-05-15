@@ -13,7 +13,7 @@ RUN gcc -static -o membarrier_check membarrier_check.c
 RUN strip membarrier_check
 
 # Pull base image.
-FROM jlesage/baseimage-gui:ubuntu-24.04-v4.11.3
+FROM jlesage/baseimage-gui:ubuntu-24.04-v4.12.0
 
 # Docker image version is provided via build arg.
 ARG DOCKER_IMAGE_VERSION=
@@ -69,9 +69,9 @@ RUN \
         # Brave runtime dependencies.
         libnspr4 \
         libnss3 \
-        libatk1.0-0 \
-        libatk-bridge2.0-0 \
-        libcups2 \
+        libatk1.0-0t64 \
+        libatk-bridge2.0-0t64 \
+        libcups2t64 \
         libdrm2 \
         libxkbcommon0 \
         libxcomposite1 \
@@ -83,7 +83,15 @@ RUN \
         libasound2t64 \
         libpango-1.0-0 \
         libcairo2 \
-        && \
+        || true && \
+    if [ "$ARCH" = "arm64" ]; then \
+        sed -i 's/chown root:staff/chown root:root/g' \
+            /var/lib/dpkg/info/fontconfig-config.postinst 2>/dev/null || true && \
+        printf '#!/bin/sh\nexit 0\n' > \
+            /var/lib/dpkg/info/fontconfig.postinst && \
+        chmod +x /var/lib/dpkg/info/fontconfig.postinst; \
+    fi && \
+    dpkg --configure -a || true && \
     # Remove unneeded icons.
     find /usr/share/icons/Adwaita -type d -mindepth 1 -maxdepth 1 -not -name 16x16 -not -name scalable -exec rm -rf {} ';' && \
     true
