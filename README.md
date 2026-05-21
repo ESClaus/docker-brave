@@ -180,7 +180,7 @@ it contains. The following tags are available:
 | Tag | Description |
 |-----|-------------|
 | `latest` | Always points to the most recently built image. |
-| `1.89.145` | Specific Brave Browser version. |
+| `1.90.122` | Specific Brave Browser version. |
 
 To use a specific version:
 
@@ -189,6 +189,54 @@ docker pull esclaus/docker-brave:1.89.145
 ```
 
 View all available tags on [Docker Hub](https://hub.docker.com/r/esclaus/docker-brave/tags).
+
+## Browser Policies
+
+This container applies a set of enterprise policies to Brave Browser to disable
+features that are unnecessary or privacy-invasive in a containerized environment.
+These policies are applied via `/etc/brave/policies/managed/policies.json` and
+take effect automatically on startup.
+
+### Disabled Features
+
+| Feature | Reason |
+|---------|--------|
+| Brave AI (Leo) | Unnecessary in a remote browser container |
+| Brave Rewards | Crypto rewards system not needed |
+| Brave Wallet | Crypto wallet not needed |
+| Brave VPN | VPN functionality not needed |
+| Tor | Not needed in a containerized environment |
+| Brave News | News feed not needed |
+| Brave Talk | Video calling not needed |
+| Speedreader | Not needed |
+| Playlist | Not needed |
+| Wayback Machine | Not needed |
+| Telemetry (P3A) | Privacy — disables usage analytics |
+| Stats Ping | Privacy — disables usage statistics |
+| Web Discovery | Privacy — disables web discovery reporting |
+
+### What Is NOT Disabled
+
+The following features are intentionally left enabled as they are useful
+regardless of how Brave is being used:
+
+- Built-in password manager
+- Address and credit card autofill
+- Page translation
+- Brave Sync
+- DNS settings (uses your network's default DNS)
+
+### Overriding Policies
+
+If you want to override any of these policies, you can mount your own
+`policies.json` file into the container:
+
+```shell
+-v /path/to/your/policies.json:/etc/brave/policies/managed/policies.json
+```
+
+A full list of available Brave policy options can be found at
+[Brave Policy Documentation](https://support.brave.com/hc/en-us/articles/360039248271).
 
 ## Docker Image Update
 

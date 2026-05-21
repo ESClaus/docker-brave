@@ -30,6 +30,28 @@ docker run -d \
 
 Access the GUI by browsing to `http://your-host-ip:5800`.
 
+## Browser Policies
+
+This container applies enterprise policies to disable unnecessary and
+privacy-invasive Brave features out of the box.
+
+**Disabled by default:**
+- Brave AI (Leo), Rewards, Wallet, VPN, Tor
+- Brave News, Talk, Speedreader, Playlist, Wayback Machine
+- Telemetry, stats ping, and web discovery reporting
+
+**Intentionally left enabled:**
+- Password manager, autofill, sync, translation, DNS settings
+
+To override policies, mount your own `policies.json`:
+
+```shell
+-v /path/to/your/policies.json:/etc/brave/policies/managed/policies.json
+```
+
+Full policy documentation at [brave://policy](brave://policy) or
+[Brave Policy Docs](https://support.brave.com/hc/en-us/articles/360039248271).
+
 ## Environment Variables
 
 | Variable | Description | Default |
