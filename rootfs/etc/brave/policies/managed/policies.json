@@ -11,5 +11,6 @@
   "BraveTalkDisabled": true,
   "BraveSpeedreaderEnabled": false,
   "BraveWaybackMachineEnabled": false,
-  "BravePlaylistEnabled": false
+  "BravePlaylistEnabled": false,
+  "PromptForDownloadLocation": false
 }
