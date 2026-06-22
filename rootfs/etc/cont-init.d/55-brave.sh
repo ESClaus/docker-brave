@@ -37,6 +37,12 @@ do
     fi
 done
 
+# Remove stale Brave crashpad lock files left over from unclean shutdowns.
+CRASHPAD_PENDING_DIR="/config/xdg/config/BraveSoftware/Brave-Browser/Crash Reports/pending"
+if [ -d "$CRASHPAD_PENDING_DIR" ]; then
+    find "$CRASHPAD_PENDING_DIR" -name "*.lock" -exec rm -f {} \;
+fi
+
 # Clear stale process tracking from Local State to prevent
 # "profile in use" errors after container restarts.
 if [ -f "/config/profile/Local State" ]; then
