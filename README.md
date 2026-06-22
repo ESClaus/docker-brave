@@ -430,6 +430,29 @@ by the container stopping before Brave can write a clean exit state. Simply
 dismiss the dialog by clicking the X — it does not indicate any data loss or
 corruption.
 
+### "Profile in use" Error After Container Update
+
+If Brave fails to start after updating the container or Brave version, showing
+an error like "The profile appears to be in use by another Brave process on
+another computer," this is caused by stale lock files left over from an
+unclean shutdown.
+
+This container automatically cleans up known lock file locations on startup:
+
+- `/config/profile/SingletonLock`
+- `/config/profile/SingletonSocket`
+- `/config/profile/SingletonCookie`
+- Crashpad lock files in `/config/xdg/config/BraveSoftware/Brave-Browser/Crash Reports/pending/`
+
+If you still encounter this error, the lock files may exist in a location not
+covered by this cleanup. You can manually remove them with:
+
+```shell
+docker exec -it brave-browser sh -c 'rm -f /config/profile/Singleton*'
+```
+
+Then restart the container.
+
 ## Support or Contact
 
 Having troubles with the container or have questions? Please
