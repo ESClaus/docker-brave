@@ -31,7 +31,7 @@ for LOCK_FILE in \
     /config/profile/SingletonSocket \
     /config/profile/SingletonCookie
 do
-    if [ -e "$LOCK_FILE" ]; then
+    if [ -e "$LOCK_FILE" ] || [ -L "$LOCK_FILE" ]; then
         echo "Removing stale lock file: $LOCK_FILE"
         rm -f "$LOCK_FILE"
     fi
