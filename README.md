@@ -1,5 +1,4 @@
 # Docker container for Brave Browser
-[![Release](https://img.shields.io/github/release/ESClaus/docker-brave.svg?logo=github&style=for-the-badge)](https://github.com/ESClaus/docker-brave/releases/latest)
 [![Docker Image Size](https://img.shields.io/docker/image-size/esclaus/docker-brave/latest?logo=docker&style=for-the-badge)](https://hub.docker.com/r/esclaus/docker-brave/tags)
 [![Docker Pulls](https://img.shields.io/docker/pulls/esclaus/docker-brave?label=Pulls&logo=docker&style=for-the-badge)](https://hub.docker.com/r/esclaus/docker-brave)
 [![Docker Stars](https://img.shields.io/docker/stars/esclaus/docker-brave?label=Stars&logo=docker&style=for-the-badge)](https://hub.docker.com/r/esclaus/docker-brave)
