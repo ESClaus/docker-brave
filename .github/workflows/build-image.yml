@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
 
 jobs:
   build:
@@ -54,3 +58,30 @@ jobs:
             BRAVE_FLAVOR=${{ matrix.flavor }}
             BRAVE_VERSION=${{ steps.brave_version.outputs.version }}
             DOCKER_IMAGE_VERSION=${{ steps.brave_version.outputs.version }}
+
+  smoke-test:
+    name: Smoke test ${{ matrix.flavor }}
+    needs: build
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: brave-browser
+            prefix: ""
+          - flavor: brave-origin
+            prefix: "origin-"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull published image
+        run: docker pull esclaus/docker-brave:${{ matrix.prefix }}latest
+
+      - name: Run first-run smoke test
+        run: |
+          chmod +x scripts/smoke-test.sh
+          ./scripts/smoke-test.sh \
+            esclaus/docker-brave:${{ matrix.prefix }}latest 5899
