@@ -14,6 +14,21 @@ uses Selkies, a WebRTC-based streaming technology that can feel laggy over remot
 connections. This container uses TigerVNC, providing significantly lower latency
 and a more responsive browsing experience.
 
+## Image Variants
+
+Two variants are built from the same Dockerfile:
+
+| Variant | Tags | Description |
+|---------|------|-------------|
+| Brave | `latest`, `1.92.141` | The standard Brave Browser release. |
+| Brave Origin | `origin-latest`, `origin-1.92.141` | [Brave Origin](https://brave.com/origin/), a build without Rewards, Wallet, VPN, Leo (Brave AI), Talk, News, and other bundled features. |
+
+Both are available for `linux/amd64` and `linux/arm64` and behave identically
+with respect to configuration, environment variables, and volumes.
+
+If you used this container when it shipped enterprise debloat policies, **Brave
+Origin is the closest equivalent** and is the recommended replacement.
+
 ## Quick Start
 
 ```shell
@@ -25,6 +40,17 @@ docker run -d \
     esclaus/docker-brave
 ```
 
+For Brave Origin, use the `origin-latest` tag and a separate config directory:
+
+```shell
+docker run -d \
+    --name=brave-origin \
+    -p 5800:5800 \
+    -v /docker/appdata/brave-origin:/config:rw \
+    --shm-size=1gb \
+    esclaus/docker-brave:origin-latest
+```
+
 > **Important:** The `--shm-size=1gb` parameter is required. Without it Brave
 > will crash on startup.
 
@@ -32,25 +58,35 @@ Access the GUI by browsing to `http://your-host-ip:5800`.
 
 ## Browser Policies
 
-This container applies enterprise policies to disable unnecessary and
-privacy-invasive Brave features out of the box.
+**This changed in 1.92.141.** Earlier versions shipped an enterprise policy file
+disabling Leo, Rewards, Wallet, VPN, Tor, News, Talk, Speedreader, Playlist,
+Wayback Machine, and telemetry. That file has been removed — use the **Brave
+Origin** variant if you want those features gone, or supply your own policy file.
 
-**Disabled by default:**
-- Brave AI (Leo), Rewards, Wallet, VPN, Tor
-- Brave News, Talk, Speedreader, Playlist, Wayback Machine
-- Telemetry, stats ping, and web discovery reporting
+The standard Brave image now ships a single policy, `BraveWalletDisabled`. This
+is not a feature preference: as of Brave 1.92 the browser aborts with `SIGTRAP`
+during wallet initialization on first launch in a headless container, causing
+the container to exit immediately. The failure only occurs with an empty
+`/config`. The policy prevents it and will be removed once fixed upstream.
 
-**Intentionally left enabled:**
-- Password manager, autofill, sync, translation, DNS settings
+Brave Origin ships no policy file, since it does not include the wallet.
 
-To override policies, mount your own `policies.json`:
+Both variants disable the "Ask where to save each file" download prompt via
+Chromium's `initial_preferences`, because that dialog cannot render inside the
+container. Unlike a policy, this only seeds the default — the setting remains
+changeable in Brave's settings.
+
+To supply your own policies:
 
 ```shell
--v /path/to/your/policies.json:/etc/brave/policies/managed/policies.json
+-v /path/to/your/policies.json:/etc/brave/policies/managed/policies.json:ro
 ```
 
-Full policy documentation at [brave://policy](brave://policy) or
-[Brave Policy Docs](https://support.brave.com/hc/en-us/articles/360039248271).
+> **Warning:** If you write your own policy file for the standard Brave image,
+> keep `"BraveWalletDisabled": true` in it, or the first-launch crash returns.
+> The previous debloat policy set is documented in the
+> [GitHub repository](https://github.com/ESClaus/docker-brave) for anyone who
+> wants to restore it.
 
 ## Environment Variables
 
@@ -89,6 +125,14 @@ services:
       - "5800:5800"
     volumes:
       - "/docker/appdata/brave-browser:/config:rw"
+    shm_size: "1gb"
+
+  brave-origin:
+    image: esclaus/docker-brave:origin-latest
+    ports:
+      - "5801:5800"
+    volumes:
+      - "/docker/appdata/brave-origin:/config:rw"
     shm_size: "1gb"
 ```
 

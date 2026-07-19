@@ -16,6 +16,11 @@ connect with any VNC client.
 > This Docker container is entirely unofficial and not made by the creators of
 > Brave Browser.
 
+> [!TIP]
+> Two variants are available: standard **Brave** and **Brave Origin**, a build
+> that ships without Rewards, Wallet, VPN, Leo, and other bundled features. See
+> [Image Variants](#image-variants).
+
 ---
 
 [![Brave logo](https://raw.githubusercontent.com/ESClaus/docker-brave/main/brave-icon.png)](https://brave.com)
@@ -41,6 +46,7 @@ providing a significantly more responsive experience with lower latency.
 
 ## Table of Contents
 
+   * [Image Variants](#image-variants)
    * [Quick Start](#quick-start)
    * [Usage](#usage)
       * [Environment Variables](#environment-variables)
@@ -48,6 +54,7 @@ providing a significantly more responsive experience with lower latency.
       * [Ports](#ports)
       * [Docker Compose File](#docker-compose-file)
    * [Docker Image Versioning and Tags](#docker-image-versioning-and-tags)
+   * [Browser Policies](#browser-policies)
    * [Docker Image Update](#docker-image-update)
       * [unRAID](#unraid)
    * [User/Group IDs](#usergroup-ids)
@@ -57,6 +64,25 @@ providing a significantly more responsive experience with lower latency.
    * [Allowing the membarrier System Call](#allowing-the-membarrier-system-call)
    * [Troubleshooting](#troubleshooting)
    * [Support or Contact](#support-or-contact)
+
+## Image Variants
+
+This repository publishes two variants from the same Dockerfile, selected by the
+`BRAVE_FLAVOR` build argument.
+
+| Variant | Tag prefix | Description |
+|---------|------------|-------------|
+| Brave | *(none)* | The standard Brave Browser release. |
+| Brave Origin | `origin-` | [Brave Origin](https://brave.com/origin/), a build that ships without Rewards, Wallet, VPN, Leo (Brave AI), Talk, News, and other bundled features. |
+
+Both variants are built for `linux/amd64` and `linux/arm64`, use identical
+container tooling, and behave the same way with respect to configuration,
+environment variables, and data volumes.
+
+If you previously used this container with the enterprise debloat policies that
+shipped in earlier versions, **Brave Origin is the closest equivalent** and is
+the recommended choice. See [Browser Policies](#browser-policies) for details on
+what changed.
 
 ## Quick Start
 
@@ -81,6 +107,21 @@ Where:
     state, logs, and any files requiring persistency.
 
 Access the Brave Browser GUI by browsing to `http://your-host-ip:5800`.
+
+To run the Brave Origin variant instead, use the `origin-latest` tag:
+
+```shell
+docker run -d \
+    --name=brave-origin \
+    -p 5800:5800 \
+    -v /docker/appdata/brave-origin:/config:rw \
+    --shm-size=1gb \
+    esclaus/docker-brave:origin-latest
+```
+
+> [!IMPORTANT]
+> Use a separate `/config` directory for each variant. The two builds maintain
+> independent profiles and should not share one.
 
 > [!IMPORTANT]
 > The `--shm-size=1gb` parameter is required. Brave is a Chromium-based browser
@@ -171,70 +212,122 @@ services:
     shm_size: "1gb"
 ```
 
+To run the Brave Origin variant instead, change the image tag and use a separate
+config directory:
+
+```yaml
+services:
+  brave-origin:
+    image: esclaus/docker-brave:origin-latest
+    ports:
+      - "5800:5800"
+    volumes:
+      - "/docker/appdata/brave-origin:/config:rw"
+    shm_size: "1gb"
+```
+
 ## Docker Image Versioning and Tags
 
 Each release of this Docker image is tagged with the version of Brave Browser
 it contains. The following tags are available:
 
-| Tag | Description |
-|-----|-------------|
-| `latest` | Always points to the most recently built image. |
-| `1.90.122` | Specific Brave Browser version. |
+| Tag | Variant | Description |
+|-----|---------|-------------|
+| `latest` | Brave | Always points to the most recently built image. |
+| `1.92.141` | Brave | A specific Brave version. |
+| `origin-latest` | Brave Origin | Always points to the most recently built image. |
+| `origin-1.92.141` | Brave Origin | A specific Brave Origin version. |
+
+Images are additionally tagged with the Git commit SHA they were built from
+(for example `origin-c97323e...`), which can be used to pin to an exact build
+when multiple images share the same Brave version.
 
 To use a specific version:
 
 ```shell
-docker pull esclaus/docker-brave:1.89.145
+docker pull esclaus/docker-brave:1.92.141
+docker pull esclaus/docker-brave:origin-1.92.141
 ```
 
 View all available tags on [Docker Hub](https://hub.docker.com/r/esclaus/docker-brave/tags).
 
 ## Browser Policies
 
-This container applies a set of enterprise policies to Brave Browser to disable
-features that are unnecessary or privacy-invasive in a containerized environment.
-These policies are applied via `/etc/brave/policies/managed/policies.json` and
-take effect automatically on startup.
+> [!IMPORTANT]
+> **This changed in Brave 1.92.141.** Earlier versions of this container shipped
+> an enterprise policy file that disabled Leo, Rewards, Wallet, VPN, Tor, News,
+> Talk, Speedreader, Playlist, Wayback Machine, and telemetry. That file has been
+> removed. If you relied on it, use the **Brave Origin** variant, which ships
+> without those features by design, or restore the policies yourself using the
+> instructions below.
 
-### Disabled Features
+The standard Brave image now ships a single policy:
 
-| Feature | Reason |
-|---------|--------|
-| Brave AI (Leo) | Unnecessary in a remote browser container |
-| Brave Rewards | Crypto rewards system not needed |
-| Brave Wallet | Crypto wallet not needed |
-| Brave VPN | VPN functionality not needed |
-| Tor | Not needed in a containerized environment |
-| Brave News | News feed not needed |
-| Brave Talk | Video calling not needed |
-| Speedreader | Not needed |
-| Playlist | Not needed |
-| Wayback Machine | Not needed |
-| Telemetry (P3A) | Privacy — disables usage analytics |
-| Stats Ping | Privacy — disables usage statistics |
-| Web Discovery | Privacy — disables web discovery reporting |
-
-### What Is NOT Disabled
-
-The following features are intentionally left enabled as they are useful
-regardless of how Brave is being used:
-
-- Built-in password manager
-- Address and credit card autofill
-- Page translation
-- Brave Sync
-- DNS settings (uses your network's default DNS)
-
-### Overriding Policies
-
-If you want to override any of these policies, you can mount your own
-`policies.json` file into the container:
-
-```shell
--v /path/to/your/policies.json:/etc/brave/policies/managed/policies.json
+```json
+{
+  "BraveWalletDisabled": true
+}
 ```
 
-A full list of available Brave policy options can be found at
+This is **not** a feature preference. It works around an upstream bug: as of
+Brave 1.92, the browser aborts with `SIGTRAP` during wallet initialization on
+first launch inside a headless container, and the container exits immediately.
+The failure only occurs with an empty `/config` — existing profiles are
+unaffected — which is why it went unnoticed for several releases. Setting this
+policy prevents the crash.
+
+Brave 1.90.122 does not exhibit the problem. Passing
+`--disable-features=BraveWallet` does not prevent it; only the policy does.
+
+This policy will be removed once the upstream issue is fixed. The Brave Origin
+image ships no policy file at all, since it does not include the wallet.
+
+### Download Prompt
+
+Both variants set `download.prompt_for_download` to `false` via Chromium's
+`initial_preferences` mechanism. Brave's "Ask where to save each file before
+downloading" dialog cannot render inside the container, so downloads would
+otherwise hang.
+
+Unlike a policy, this only seeds the default on first run — the setting remains
+visible and changeable in Brave's settings.
+
+### Restoring the Previous Debloat Policies
+
+If you preferred the previous behavior and do not want to switch to Brave
+Origin, save the following as `policies.json` on your host:
+
+```json
+{
+  "BraveAIChatEnabled": false,
+  "BraveRewardsDisabled": true,
+  "BraveWalletDisabled": true,
+  "BraveVPNDisabled": true,
+  "TorDisabled": true,
+  "BraveP3AEnabled": false,
+  "BraveStatsPingEnabled": false,
+  "BraveWebDiscoveryEnabled": false,
+  "BraveNewsDisabled": true,
+  "BraveTalkDisabled": true,
+  "BraveSpeedreaderEnabled": false,
+  "BraveWaybackMachineEnabled": false,
+  "BravePlaylistEnabled": false
+}
+```
+
+Then mount it over the container's policy file:
+
+```shell
+-v /path/to/your/policies.json:/etc/brave/policies/managed/policies.json:ro
+```
+
+> [!WARNING]
+> If you write your own policy file for the standard Brave image, keep
+> `"BraveWalletDisabled": true` in it. Omitting it will reintroduce the
+> first-launch crash described above.
+
+Applied policies can be reviewed at `brave://policy`. A full list of options is
+available in the
 [Brave Policy Documentation](https://support.brave.com/hc/en-us/articles/360039248271).
 
 ## Docker Image Update
@@ -429,6 +522,25 @@ by the container stopping before Brave can write a clean exit state. Simply
 dismiss the dialog by clicking the X — it does not indicate any data loss or
 corruption.
 
+### Container Exits Immediately on First Run
+
+If the container starts and then exits with status `0` before the GUI becomes
+available, and `/config/log/brave/error.log` ends with a line similar to:
+
+```text
+/usr/bin/brave-browser: line 30: 1005 Trace/breakpoint trap "$HERE/brave" "$@"
+```
+
+then Brave is aborting during startup. As of Brave 1.92 this occurs during
+wallet initialization when the profile directory is empty.
+
+The standard image ships a policy that prevents this. If you have mounted your
+own `policies.json`, ensure it includes `"BraveWalletDisabled": true`. See
+[Browser Policies](#browser-policies).
+
+Note that this failure only occurs with a **new, empty** `/config`. An existing
+profile will start normally, which can make the problem appear intermittent.
+
 ### "Profile in use" Error After Container Update
 
 If Brave fails to start after updating the container or Brave version, showing
@@ -441,7 +553,8 @@ This container automatically cleans up known lock file locations on startup:
 - `/config/profile/SingletonLock`
 - `/config/profile/SingletonSocket`
 - `/config/profile/SingletonCookie`
-- Crashpad lock files in `/config/xdg/config/BraveSoftware/Brave-Browser/Crash Reports/pending/`
+- Crashpad lock files in `/config/xdg/config/BraveSoftware/*/Crash Reports/pending/`
+  (the directory is `Brave-Browser` or `Brave-Origin` depending on the variant)
 
 If you still encounter this error, the lock files may exist in a location not
 covered by this cleanup. You can manually remove them with:
