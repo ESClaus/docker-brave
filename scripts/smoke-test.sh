@@ -37,7 +37,9 @@ CONFIG_DIR="$(mktemp -d)"
 
 cleanup() {
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-    rm -rf "$CONFIG_DIR"
+    # The container chowns /config to its own UID. On a real bind mount (Linux)
+    # the host user may no longer be able to delete it, so this is best-effort.
+    rm -rf "$CONFIG_DIR" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -54,8 +56,14 @@ fail() {
     echo ""
     echo "--- brave error.log (last 30) ---"
     # Brave's own stderr is redirected here by the container and does NOT
-    # appear in docker logs. Today's SIGTRAP was only visible in this file.
-    tail -30 "$CONFIG_DIR/log/brave/error.log" 2>/dev/null || echo "(not present)"
+    # appear in docker logs. The SIGTRAP wallet crash was only visible here.
+    #
+    # Read it from inside the container: the container chowns /config to its
+    # own UID, so on a Linux bind mount the host user often cannot read it.
+    docker exec "$CONTAINER" tail -30 /config/log/brave/error.log 2>/dev/null \
+        || docker run --rm -v "${CONFIG_DIR}:/c:ro" --entrypoint /bin/sh "$IMAGE" \
+             -c 'tail -30 /c/log/brave/error.log' 2>/dev/null \
+        || echo "(not readable)"
     exit 1
 }
 
@@ -108,7 +116,10 @@ echo " ok"
 
 # The profile directory should have been populated. An empty one means Brave
 # never really started, even if the VNC layer is serving pages.
-if [ ! -f "${CONFIG_DIR}/profile/Local State" ]; then
+#
+# Checked inside the container rather than on the host: /config is chowned to
+# the container's UID, so the host user may not be able to read it at all.
+if ! docker exec "$CONTAINER" test -f "/config/profile/Local State"; then
     fail "Brave did not initialise a profile (no /config/profile/Local State)"
 fi
 echo "Profile initialised: ok"
