@@ -7,8 +7,17 @@ on:
 
 jobs:
   build:
-    name: Build Docker Image
+    name: Build ${{ matrix.flavor }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: brave-browser
+            prefix: ""
+          - flavor: brave-origin
+            prefix: "origin-"
 
     steps:
       - name: Checkout
@@ -39,7 +48,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            esclaus/docker-brave:latest
-            esclaus/docker-brave:${{ steps.brave_version.outputs.version }}
+            esclaus/docker-brave:${{ matrix.prefix }}latest
+            esclaus/docker-brave:${{ matrix.prefix }}${{ steps.brave_version.outputs.version }}
+            esclaus/docker-brave:${{ matrix.prefix }}${{ github.sha }}
           build-args: |
+            BRAVE_FLAVOR=${{ matrix.flavor }}
+            BRAVE_VERSION=${{ steps.brave_version.outputs.version }}
             DOCKER_IMAGE_VERSION=${{ steps.brave_version.outputs.version }}
