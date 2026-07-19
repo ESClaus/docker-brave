@@ -21,6 +21,8 @@ ARG DOCKER_IMAGE_VERSION=
 # Define software versions.
 ARG BRAVE_VERSION=1.92.140
 
+ARG BRAVE_FLAVOR=brave-browser
+
 # Define working directory.
 WORKDIR /tmp
 
@@ -34,11 +36,16 @@ RUN \
         DEB_ARCH="arm64"; \
     fi && \
     curl -# -L -o /tmp/brave.deb \
-        "https://github.com/brave/brave-browser/releases/download/v${BRAVE_VERSION}/brave-browser_${BRAVE_VERSION}_${DEB_ARCH}.deb" && \
+        "https://github.com/brave/brave-browser/releases/download/v${BRAVE_VERSION}/${BRAVE_FLAVOR}_${BRAVE_VERSION}_${DEB_ARCH}.deb" && \
     add-pkg --virtual extract-dependencies dpkg && \
     dpkg -x /tmp/brave.deb /tmp/brave-pkg && \
     cp -r /tmp/brave-pkg/opt/. /opt/ && \
-    ln -sf /opt/brave.com/brave/brave-browser /usr/bin/brave-browser && \
+    BRAVE_LAUNCHER="$(find /opt/brave.com -maxdepth 2 -type f \
+        \( -name brave-browser -o -name brave-origin \) | head -1)" && \
+    test -n "$BRAVE_LAUNCHER" && \
+    ln -sf "$BRAVE_LAUNCHER" /usr/bin/brave-browser && \
+    printf '%s\n' '{"download":{"prompt_for_download":false}}' \
+        > "$(dirname "$BRAVE_LAUNCHER")/initial_preferences" && \
     rm -rf /tmp/brave.deb /tmp/brave-pkg && \
     del-pkg build-dependencies && \
     del-pkg extract-dependencies
@@ -101,11 +108,17 @@ RUN \
 
 # Add files.
 COPY rootfs/ /
+COPY rootfs-${BRAVE_FLAVOR}/ /
 COPY --from=membarrier /tmp/membarrier_check /usr/bin/
 
 # Set internal environment variables.
 RUN \
-    set-cont-env APP_NAME "Brave" && \
+    if [ "$BRAVE_FLAVOR" = "brave-origin" ]; then \
+        APP_DISPLAY_NAME="Brave Origin"; \
+    else \
+        APP_DISPLAY_NAME="Brave"; \
+    fi && \
+    set-cont-env APP_NAME "$APP_DISPLAY_NAME" && \
     set-cont-env APP_VERSION "$BRAVE_VERSION" && \
     set-cont-env DOCKER_IMAGE_VERSION "$DOCKER_IMAGE_VERSION" && \
     true
