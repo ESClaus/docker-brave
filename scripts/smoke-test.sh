@@ -9,11 +9,16 @@
 # reused an existing profile directory.
 #
 # Usage:
-#   ./scripts/smoke-test.sh <image> [port]
+#   ./scripts/smoke-test.sh <image> [port] [expected-version]
 #
 # Examples:
 #   ./scripts/smoke-test.sh docker-brave:local
 #   ./scripts/smoke-test.sh esclaus/docker-brave:origin-latest 5899
+#   ./scripts/smoke-test.sh docker-brave:local 5899 1.92.141
+#
+# If expected-version is given, the running browser's version must match it.
+# This catches the case where a pull returned a stale image, or where the
+# Dockerfile ARG and the image actually built have drifted apart.
 #
 # Exits 0 on success, non-zero on failure.
 
@@ -21,9 +26,10 @@ set -eu
 
 IMAGE="${1:-}"
 PORT="${2:-5899}"
+EXPECTED_VERSION="${3:-}"
 
 if [ -z "$IMAGE" ]; then
-    echo "usage: $0 <image> [port]" >&2
+    echo "usage: $0 <image> [port] [expected-version]" >&2
     exit 2
 fi
 
@@ -70,6 +76,9 @@ fail() {
 echo "Image:  $IMAGE"
 echo "Port:   $PORT"
 echo "Config: $CONFIG_DIR (empty, fresh profile)"
+if [ -n "$EXPECTED_VERSION" ]; then
+    echo "Expect: Brave $EXPECTED_VERSION"
+fi
 echo ""
 
 docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
@@ -123,6 +132,45 @@ if ! docker exec "$CONTAINER" test -f "/config/profile/Local State"; then
     fail "Brave did not initialise a profile (no /config/profile/Local State)"
 fi
 echo "Profile initialised: ok"
+
+# Report the browser version actually running inside the image.
+#
+# Note the two different version strings in play. The container reports its
+# Brave version as e.g. "Brave Browser 150.1.92.141", where 150 is the Chromium
+# major and 1.92.141 is the Brave version that BRAVE_VERSION is set to. The
+# check below is therefore a suffix match, not an equality test.
+# trim_ws strips carriage returns and leading/trailing whitespace. Brave's
+# --version output has a trailing space, which silently breaks a suffix match.
+trim_ws() {
+    tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+}
+
+VERSION_LINE="$(docker exec "$CONTAINER" /usr/bin/brave-browser --version 2>/dev/null | trim_ws)"
+
+if [ -z "$VERSION_LINE" ]; then
+    # Fall back to the line the supervisor logs when it starts the app service.
+    VERSION_LINE="$(docker logs "$CONTAINER" 2>&1 \
+        | grep -m1 '^\[app *\] Brave' \
+        | sed 's/^\[app *\] //' \
+        | trim_ws)"
+fi
+
+if [ -z "$VERSION_LINE" ]; then
+    fail "could not determine the running Brave version"
+fi
+
+echo "Running: $VERSION_LINE"
+
+if [ -n "$EXPECTED_VERSION" ]; then
+    case "$VERSION_LINE" in
+        *"$EXPECTED_VERSION")
+            echo "Version matches expected: ok"
+            ;;
+        *)
+            fail "version mismatch: expected to end with '$EXPECTED_VERSION', got '$VERSION_LINE'"
+            ;;
+    esac
+fi
 
 echo ""
 echo "PASS: $IMAGE"
