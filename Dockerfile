@@ -13,13 +13,13 @@ RUN gcc -static -o membarrier_check membarrier_check.c
 RUN strip membarrier_check
 
 # Pull base image.
-FROM jlesage/baseimage-gui:ubuntu-24.04-v4.12.5
+FROM jlesage/baseimage-gui:ubuntu-24.04-v4
 
 # Docker image version is provided via build arg.
 ARG DOCKER_IMAGE_VERSION=
 
 # Define software versions.
-ARG BRAVE_VERSION=1.93.129
+ARG BRAVE_VERSION=1.93.134
 
 ARG BRAVE_FLAVOR=brave-browser
 
