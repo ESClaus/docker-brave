@@ -19,7 +19,7 @@ FROM jlesage/baseimage-gui:ubuntu-24.04-v4
 ARG DOCKER_IMAGE_VERSION=
 
 # Define software versions.
-ARG BRAVE_VERSION=1.93.136
+ARG BRAVE_VERSION=1.93.138
 
 ARG BRAVE_FLAVOR=brave-browser
 
